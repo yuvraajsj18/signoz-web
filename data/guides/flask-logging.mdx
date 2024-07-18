@@ -1,0 +1,280 @@
+title: Complete Guide to logging in Flask - Python Flask Logging
+slug: flask-logging
+date: 2024-07-18
+tags: [logging]
+authors: [soumya_gupta]
+description: Learn Flask logging from setup to advanced techniques. Covers configuration, best practices, and centralization.
+keywords: [flask logging, logs, logging, flask, flask web applications, flask logging best practices]
+
+Logging is a critical component in Flask applications, providing developers with insights into application behavior, errors, and performance.
+
+As a developer, grasping the fundamentals of logging systems is essential, especially when working with web applications because it helps to identify and solve errors that occur in application by monitoring the code’s execution as if like following a breadcrumb trail. 
+
+It also minimizes Mean time to detection (MTTD) and mean time to resolution (MTTR) through automated alerts, historical data analysis, real-time monitoring, etc.
+
+
+
+In this comprehensive guide, we'll dive deep into Flask logging, covering everything from basic setup to advanced techniques. You'll learn:
+
+- How to set up and configure logging in your Flask apps
+- Best practices for structuring and formatting your logs
+- Techniques for handling sensitive information and high log volumes
+- Ways to centralize your logs for easier analysis
+Whether you're troubleshooting a tricky bug or monitoring your app's performance, the insights you gain from proper logging can be invaluable. Let's unlock the power of Flask logging and take your development skills to the next level.
+
+## Logging with Flask
+
+### Prerequisites
+
+Before we dive into Flask logging, ensure you have the following set up:
+
+1. A recent version of Python installed on your machine. You can download it from the official Python site.
+1. Flask installed on your system. Install it using pip:
+1. A new working directory for this project:
+1. Create a new file app.py for your flask application in this directory:
+With these prerequisites in place, you're ready to explore Flask logging
+
+## Basic Usage
+
+### Set up a Simple Logger in Flask
+
+Import Flask into the application app.py as:
+
+```python
+from flask import Flask
+```
+
+Flask is a class provided by the flask framework and is imported into our application. 
+
+It’s a central component used to create an instance of a Flask web application app.py as: 
+
+```python
+app = Flask(__name__)
+```
+
+
+
+What is an instance? An instance in brief is a single, unique object created from a class, in this context, we define an instance app of the class Flask.
+
+
+In addition to this three routes (/, /info, and /warning) are defined in our application app.py which when accessed invokes their respective functions for returning different strings. These routes can be invoked via logging calls (info(), warning()) in the respective functions.
+
+```python
+# Logging Call
+app.logger.info("An info message!")
+```
+
+
+
+Let’s break down a logging call, 
+
+app: an instance of our application app.py
+
+logger: is an attribute of app object. This attribute is used for creating log entries by providing various methods to log messages at different severity levels. 
+
+info(): is a method of the logger object that logs a message with a severity level of INFO
+
+We’ll explore the severity of logging levels in detail further in this article. 
+
+
+
+So, when you do a logging call the entire process looks like this: 
+
+1. “An info message” string is created to be logged
+1. logger object associated with the app instance is accessed
+1. info() method on the logger object is called with the message string
+1. A log record includes the message, log levels, and other metadata such as timestamp, module date, etc. 
+1. The log record is dispatched to any handlers configured in the logging setup. 
+
+
+A Handler defines where and how log messages are output (e.g., console, file, email).
+
+Let’s take an example,
+
+```python
+from flask import Flask
+
+# Create A Flask Application Instance
+app = Flask(__name__)
+
+# Route To Handle Requests To The Root URL "/"
+@app.route("/")
+def hello():
+		# A Simple Greeting Message Is Returned
+    return "Greetings!"  
+
+# Route to handle requests to "/info"
+@app.route("/info")
+def info():
+		# Log An Information Message
+    app.logger.info("An info message.") 
+    # Return A Message Indicating Info Was Logged 
+    return "Info message"  
+
+# Route To Handle Requests To "/warning"
+@app.route("/warning")
+def warning():
+		# Log A Warning Message
+    app.logger.warning("A warning message.")  
+    # Return A Message Indicating A Warning Was Logged
+    return "Warning message" 
+```
+
+app instance is used for handling HTTP requests wherein app.logger object is then used to make logging calls using methods like info() and warning(). 
+
+We’ll learn more about handlers further in this article. 
+
+
+
+Type flask run command to run the code and see the output in the main server terminal: 
+
+```powershell
+* Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+* 
+Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+127.0.0.1 - - [10/Jul/2024 16:13:08] "GET / HTTP/1.1" 200 -
+```
+
+
+
+Select the provided hyperlink in the console, it’ll direct you to your web browser. 
+
+<Figure src="/img/guides/2024/07/flask-logging-Untitled.webp?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45HZZMZUHI%2F20240718%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240718T074202Z&X-Amz-Expires=3600&X-Amz-Signature=069a42abdcfc7eaf5c5c1fa6edd2c4667e623333edf0513b664a333489459a19&X-Amz-SignedHeaders=host&x-id=GetObject" alt="Web Browser displays the log message" caption="Web Browser displays the log message" />
+
+Now we defined three routes in our application app.py but it only shows the string message returned by the function def Hello():, why is that? 
+
+What we want the user to see on the web is decided by routes wherein each message is supposed to have its unique route via a decorator. In order to view messages on different routes you can always add a route in the url of the website. For example: in order to access the /warning route change the URL of your web application to http://127.0.0.1:5000/warning.
+
+In the main server terminal, you’ll see
+
+```powershell
+127.0.0.1 - - [10/Jul/2024 16:13:08] "GET / HTTP/1.1" 200 -
+[2024-07-10 16:22:32,112] WARNING in app: A warning message.
+127.0.0.1 - - [10/Jul/2024 16:22:32] "GET /warning HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2024 16:22:44] "GET / HTTP/1.1" 200 -
+```
+
+Similarly view the info message on your browser and come back to the main server terminal:  
+
+```powershell
+127.0.0.1 - - [10/Jul/2024 16:27:42] "GET /info HTTP/1.1" 200 -
+```
+
+However, if you visit the /info route, in the main server terminal you will observe, unlike the warning message, "An info message." message isn't logged as expected. That's because Flask ignores messages with a log level lower than WARNING by default, but we can customize this behavior for our web application’s requirements before we get there, we need to have a basic understanding of handlers and formatters.  
+
+## Handlers and Formatters
+
+Two essential components of logging configuration are Handlers and Formatters, which play distinct roles in how log messages are processed and formatted.
+
+### Formatter
+
+A Formatter determines the structural layout of log messages before they are emitted by a Handler. It allows customization of how log records are formatted, including adding timestamps, log levels, module names, and the actual message content in a specified order and format. Formatting a log record can help in maintaining and easy parsing of the log records for various purposes.
+
+
+
+We can add a custom formatter in our app.py using the following code: 
+
+```python
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
+```
+
+Here, 
+
+[%(asctime)s] : is a placeholder that will be replaced by the current time when the log message is created. The Square brackets [] specify literal characters in string format to separate timestamps from different parts of the log message. 
+
+%(levelame)s: is also a placeholder that will be replaced by the log level of the message (e.g., DEBUG, INFO, WARNING, etc.).
+
+%(message)s: this is a placeholder that going to be replaced by the actual log message content that you provide when logging.
+
+
+
+The expected output would be:
+
+```python
+[2024-07-11 12:24:16,417] INFO: An info message.
+```
+
+### Handler
+
+A handler defines where and how log messages should be output. They are also responsible for storing, displaying as well as sending log records (messages) to specified destinations.
+
+In our previous code, you would’ve noticed that we didn’t add any handler to it then how are the log messages recorded and displayed on the console? 
+
+If no handlers are explicitly added to the app.logger, Flask will add a default handler to ensure that log messages are output to the console.
+
+
+
+We can configure a handler as:  
+
+```python
+# Configure A Console Handler With A Custom Formatter
+# Create a StreamHandler to handle console output
+handler = logging.StreamHandler()
+# Define A Custom Log Message Format
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+# Assign The Formatter To The Handler
+handler.setFormatter(formatter)
+```
+
+Here, a StreamHandler instance is created to send logs to the console, the formatter instance is defined with a specific format and then the formatter is associated with the handler using the setFormatter() method to ensure that log messages emitted by this handler will be formatted according to the specified format.
+
+There are various types of handlers:
+
+1. StreamHandler: Sends log messages to the console (sys.stdout or sys.stderr).
+1. FileHandler: Writes log messages to a specified file app.log on disk 
+1. HTTPHandler:  Sends log messages to an HTTP endpoint. 
+
+
+Note: In the context of logging, python's built-in logging module uses the term handler, while Loguru uses the term sink.
+
+Now, back to our app.py wherein we wanted to customize our web application’s behavior by overriding default logger configurations. 
+
+### Configure a Logger
+
+In the Set up a simple logger section we saw how when we accessed the /info route we did not see the info because by default Flask logger ignores messages with a log level lower than WARNING and one way, we can get around it is by overriding default configurations. 
+
+To override default configurations, we can use logging.config.dictConfig() method to our existing code in app.py 
+
+```python
+from flask import Flask
+from logging.config import dictConfig
+
+# Configure logging using dictConfig
+dictConfig(
+    {
+		    # Specify the logging configuration version
+        "version": 1,
+        "formatters": {
+		        # Define a formatter named 'default'
+            "default": {
+		            # Specify log message format
+                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+            }
+        },
+        "handlers": {
+            # Define a console handler configuration
+            "console": {
+		            # Use StreamHandler to log to stdout
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                # Use 'default' formatter for this handler
+                "formatter": "default",
+            }
+        },
+        # Configure the root logger
+        "root": {
+        # Set root logger level to DEBUG
+        "level": "DEBUG",
+        # Attach 'console' handler to the root logger 
+        "handlers": ["console"]},
+    }
+)
+app = Flask(__name__)
+```
+
+dictConfig is used to configure the logging system in Python with a dictionary that defines the configuration details. The dictionary can specify formatters, handlers, loggers, and other logging settings. This configuration dictionary contains the following key elements: 
+
+1. Version Key: represents the schema version, which is 1 in this code
+1. Formatter Key: Specifies formatting patterns of log records. Here we are using a default formatter to format log records as "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
